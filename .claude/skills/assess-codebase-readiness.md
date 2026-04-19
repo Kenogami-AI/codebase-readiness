@@ -1,11 +1,11 @@
 ---
 name: assess-codebase-readiness
-description: Assess the current codebase's readiness for AI-native development against the 8-dimension model. Produces a codebase state (greenfield/brownfield/hybrid), a scorecard, a ceiling level, and a prioritized remediation plan or roadmap. Use when the user asks "is this codebase ready for agents?", "what would it take to AI-ify this?", or equivalents — or when the user runs /assess-codebase-readiness.
+description: Assess the current codebase's readiness for AI-native development against the 9-dimension model. Produces a codebase state (greenfield/brownfield/hybrid), a scorecard, a ceiling level, and a prioritized remediation plan or roadmap. Use when the user asks "is this codebase ready for agents?", "what would it take to AI-ify this?", or equivalents — or when the user runs /assess-codebase-readiness.
 ---
 
 # Assess codebase readiness
 
-You are assessing the current working directory's codebase against the eight-dimension readiness model defined at https://framework.ai-native-transformation.com/codebase-readiness.
+You are assessing the current working directory's codebase against the nine-dimension readiness model defined at https://framework.ai-native-transformation.com/codebase-readiness.
 
 Produce a structured report: the codebase's state (greenfield / brownfield / hybrid), a score 1-5 per dimension with evidence, an overall readiness level (set by the lowest score, not the average), and a prioritized remediation plan.
 
@@ -14,7 +14,7 @@ Produce a structured report: the codebase's state (greenfield / brownfield / hyb
 1. **Actually run commands.** Use Bash to collect evidence. Don't guess at coverage or CI times — measure them.
 2. **Cite evidence.** For every score, reference file paths, line numbers, or command output.
 3. **Score conservatively.** If the signal is ambiguous, round down.
-4. **The ceiling is the lowest score.** A codebase with seven 5s and one 1 is at the level of that 1. Agents fail at the weakest link.
+4. **The ceiling is the lowest score.** A codebase with eight 5s and one 1 is at the level of that 1. Agents fail at the weakest link.
 5. **Apply deferral credit.** An intentional, documented deferral (in a spec, ADR, roadmap, or README) scores one level higher than the same gap undocumented. Never apply deferral credit based on a verbal claim — only on something in the repo.
 6. **Every score below 4 must map to a concrete remediation item.** "Add tests" is not concrete. "Add test coverage for src/billing/invoice.ts (currently 0%)" is.
 7. **Keep the output navigable.** Follow the output template exactly. No creative reformatting.
@@ -43,7 +43,7 @@ State the classification and why.
 
 ### Step 3 — Score each dimension
 
-Work through the eight dimensions in order. For each:
+Work through the nine dimensions in order. For each:
 1. Run the signal-collection commands (see per-dimension sections below).
 2. Sample representative files when the rubric calls for qualitative judgment.
 3. Apply the scoring rubric.
@@ -52,9 +52,10 @@ Work through the eight dimensions in order. For each:
 
 ### Step 4 — Synthesize
 
-- Compute the ceiling (lowest score).
+- Compute the ceiling (lowest score). **Never report an average across dimensions.** Averages hide the distinction between a fixable gap and a fundamental block — do not compute, report, or imply one.
 - Map the ceiling score to a readiness level: 1 → Level 0 (Opaque), 2 → Level 1 (Instrumented), 3 → Level 2 (Validated), 4 → Level 3 (Legible) or Level 4 (Specified), 5 → Level 5 (Scenario-governed).
-- Build the remediation plan: start with the lowest-scored dimensions. For each, produce concrete actions that would raise the score by one level.
+- Identify blocking dimensions that score 1–2. The three blocking dimensions are **D1 (test coverage and feedback latency)**, **D2 (type strictness)**, and **D5 (API directness)**. When any of these scores 1–2, call them out separately in the synthesis — they can't be compensated by high scores elsewhere.
+- Build the remediation plan: prioritize raising blocking dimensions first, then ceiling-raising constraining dimensions. For each, produce concrete actions that would raise the score by one level.
 - Produce a **path to Level 5** recommendation. The question is always: what is the shortest path from the current level to Level 5 for this codebase? Team capacity, strategic priorities, and resource allocation are explicitly out of scope — those are decisions the human makes after reading the recommendation, not inputs to it. Answer purely on the evidence.
 
   Four possible paths map to the four modes:
@@ -75,15 +76,17 @@ Produce the report exactly in the template below.
 
 ### 1. Test coverage and feedback latency
 
-**Signals to collect:**
-- Coverage: run the test command with coverage (`npm test -- --coverage`, `pytest --cov`, `go test -cover`, `cargo tarpaulin`, `mvn test jacoco:report`, etc.) OR parse existing coverage report files if present (`lcov.info`, `coverage.xml`, `coverage-summary.json`).
-- CI wall-clock time: inspect CI config for timeout budgets and parallelism, then check recent CI runs via `gh run list --limit 10 --json databaseId,status,conclusion,createdAt,updatedAt` if the repo is on GitHub.
-- Test file count vs. source file count.
-- Whether tests run on every commit/PR.
+**Signals to collect, in this order:**
+
+1. **Actually run the tests first.** Before counting files, before checking coverage, run `npm test` / `pytest` / `go test ./...` / equivalent. If the test command doesn't exist, fails to compile, errors out of the test runner, or produces "0 tests executed," the tests are dead. Dead tests score **1** regardless of file count or coverage configuration. File existence is not test infrastructure — passing tests are. This check is non-negotiable.
+2. Coverage: only after confirming tests run, measure coverage with the appropriate flag (`npm test -- --coverage`, `pytest --cov`, `go test -cover`, `cargo tarpaulin`, `mvn test jacoco:report`) OR parse existing coverage report files (`lcov.info`, `coverage.xml`, `coverage-summary.json`).
+3. CI wall-clock time: inspect CI config for timeout budgets and parallelism, then check recent CI runs via `gh run list --limit 10 --json databaseId,status,conclusion,createdAt,updatedAt` if the repo is on GitHub.
+4. Test file count vs. source file count — used as context, not as the primary signal.
+5. Whether tests run on every commit/PR.
 
 **Scoring rubric:**
-- 1: No tests, or dead tests that fail.
-- 2: Low coverage (<30%), slow or unreliable CI.
+- 1: No tests, or tests that fail to run (Babel errors, missing deps, framework version mismatch, runner crash, 0 tests executed). Dead test files count as 1, not 2.
+- 2: Tests run but coverage is low (<30%) or CI is slow / unreliable / missing.
 - 3: Meaningful coverage on hot paths, CI under 30 min.
 - 4: Enforced coverage threshold in CI, CI under 5 min, failures localize.
 - 5: Behavioral scenarios cover critical paths, CI fast and green as the deploy gate.
@@ -192,6 +195,24 @@ Produce the report exactly in the template below.
 - 4: One-command setup; one-command (or auto-) deploy.
 - 5: Dev, CI, and prod are architecturally identical; anyone can set up and deploy on day one.
 
+### 9. Dependency and runtime currency
+
+**Signals to collect:**
+- Runtime version: check `engines` in `package.json`, `python_requires` / `.python-version`, `go` directive in `go.mod`, `rust-version` in `Cargo.toml`. Compare against current supported versions (e.g., Node 14 is EOL since 2023-04; Python 3.8 is EOL since 2024-10; Go is well-supported; Rust is always current).
+- Core framework version: compare against latest stable. For JS/TS: React, Vue, Angular, Next.js, Nuxt, Svelte, Ember. For Python: Django, Flask, FastAPI. For Java: Spring, etc. Count how many major versions behind.
+- Abandoned libraries: known abandonware includes Enzyme (React testing, last release 2022, React 16 adapter is highest official), Moment.js (maintenance mode, replaced by Temporal/date-fns/Luxon), jQuery in a React app, AngularJS (v1, not Angular 2+), request/request-promise, Bower. `grep` for these in `package.json` / `requirements.txt` / `go.mod`.
+- Paradigm mix: look for class components + hooks mixed in the same codebase, callbacks + promises, multiple i18n systems, CommonJS + ESM, Python 2/3 code, untyped JS + TypeScript migration in progress.
+- Dependency freshness: `npm outdated --long | head -50` or `pip list --outdated | head -50` for a sample of what's behind.
+
+**Scoring rubric:**
+- 1: Runtime EOL (e.g., Node 14, Python 3.8). Core framework 2+ major versions behind. Abandoned libraries in use (Enzyme, jQuery-in-React, AngularJS 1.x, etc.). Legacy paradigms mixed with modern ones that contradict each other.
+- 2: Runtime current but many major deps 1+ versions behind. Some abandoned libraries. Paradigm mix.
+- 3: Runtime current. Most deps within 1 major version of current. Occasional legacy pattern with documented reason.
+- 4: Runtime current. Deps within current major versions. Consistent modern paradigms.
+- 5: Aggressive dependency hygiene. No EOL runtimes, no abandoned libraries. Conventions match current community standards (e.g., hooks-only React, async/await-only JS, Redux Toolkit not raw Redux).
+
+**Why this matters:** agents are trained on current library versions and idioms. Patterns 2–3 years behind current will cause the agent to produce code that contradicts the existing codebase (hallucinating modern patterns) or to fail at recognizing legacy idioms (producing code that doesn't fit). This is a distinct AI-readiness concern from the other dimensions.
+
 ## Output template
 
 Produce the report in this exact format.
@@ -213,6 +234,12 @@ Produce the report in this exact format.
 
 Ceiling set by dimension {N} ({name}), scoring {X}.
 
+{If any of D1, D2, D5 score 1–2, add a "Blocking dimensions" callout here:}
+
+### Blocking dimensions at 1–2
+
+{List each blocking dimension (D1, D2, D5) that scores 1 or 2. These compromise agent work fundamentally and cannot be compensated by high scores elsewhere. Raise them first.}
+
 ## Scorecard
 
 | # | Dimension | Score | Evidence |
@@ -225,6 +252,7 @@ Ceiling set by dimension {N} ({name}), scoring {X}.
 | 6 | Documented intent | {X} | {one-line summary} |
 | 7 | Observability | {X} | {one-line summary} |
 | 8 | Dev and deploy simplicity | {X} | {one-line summary} |
+| 9 | Dependency and runtime currency | {X} | {one-line summary: runtime version, framework version lag, any abandoned libs} |
 
 {If any scores include deferral credit, note which dimensions and what document the deferral is based on.}
 
@@ -253,6 +281,9 @@ Ceiling set by dimension {N} ({name}), scoring {X}.
 
 ### 8. Dev and deploy simplicity — {X}/5
 {Dev setup command count, deploy process, dev/prod parity}
+
+### 9. Dependency and runtime currency — {X}/5
+{Runtime version and EOL status, framework major version lag, any abandoned libraries detected, paradigm mix}
 
 ## Prioritized remediation
 
