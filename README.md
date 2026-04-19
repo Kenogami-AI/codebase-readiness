@@ -16,7 +16,10 @@ Implements the seven-dimension readiness model from [framework.ai-native-transfo
 | 4 | Module boundary clarity | Can the agent modify one thing without breaking another? |
 | 5 | API directness | Are API calls visible at the call site, or hidden behind abstractions? |
 | 6 | Documented intent | Can the agent distinguish intentional behavior from historical accident? |
-| 7 | Observability and operational legibility | Can failures be localized and reproduced? Is dev-to-deploy frictionless? |
+| 7 | Observability | Can failures be localized and reproduced in production? |
+| 8 | Dev and deploy simplicity | Can anyone go from fresh clone to shipped feature without fighting infrastructure? |
+
+The skill also classifies the codebase state (greenfield / brownfield / hybrid) and applies a **deferral credit**: intentional, documented deferrals score one level higher than undocumented gaps.
 
 The framework page linked above explains each dimension, the scoring rubric, and why the dimensions together predict whether AI agents can produce reliable work on a codebase.
 
@@ -74,28 +77,33 @@ Framework(s): Next.js 15, React 19
 Source files (approx): 287
 Date: 2026-04-19
 
+## Codebase state: Brownfield
+
+Two-year-old production codebase, 40+ contributors, significant legacy accumulation.
+
 ## Readiness level: Level 1 — Instrumented
 
 Ceiling set by dimension 6 (Documented intent), scoring 1.
 
 ## Scorecard
 
-| # | Dimension                            | Score | Evidence                                                      |
-|:-:|--------------------------------------|:-----:|---------------------------------------------------------------|
-| 1 | Test coverage and feedback latency   |   3   | Coverage: 64%. CI p50: 8 min.                                 |
-| 2 | Type strictness                      |   4   | tsconfig strict: on. `any` count: 12 (0.3%).                  |
-| 3 | File size and context legibility     |   4   | p50: 142 lines. Largest: 847 (src/admin/dashboard.tsx).       |
-| 4 | Module boundary clarity              |   3   | 12 top-level modules; 37 boundary violations detected.        |
-| 5 | API directness                       |   2   | Factory abstraction in 89% of API call sites.                 |
-| 6 | Documented intent                    |   1   | No ADRs. 4 stale READMEs. No CLAUDE.md.                       |
-| 7 | Observability and operational legibility | 3   | Structured logs. Dev setup: 3 cmds. Deploy: 1 cmd.         |
+| # | Dimension                            | Score | Evidence                                                   |
+|:-:|--------------------------------------|:-----:|------------------------------------------------------------|
+| 1 | Test coverage and feedback latency   |   3   | Coverage: 64%. CI p50: 8 min.                              |
+| 2 | Type strictness                      |   4   | tsconfig strict: on. `any` count: 12 (0.3%).               |
+| 3 | File size and context legibility     |   4   | p50: 142 lines. Largest: 847 (src/admin/dashboard.tsx).    |
+| 4 | Module boundary clarity              |   3   | 12 top-level modules; 37 boundary violations detected.     |
+| 5 | API directness                       |   2   | Factory abstraction in 89% of API call sites.              |
+| 6 | Documented intent                    |   1   | No ADRs. 4 stale READMEs. No CLAUDE.md.                    |
+| 7 | Observability                        |   3   | Structured logs, Sentry wired, no tracing.                 |
+| 8 | Dev and deploy simplicity            |   4   | Dev setup: 2 cmds. Deploy: auto on merge.                  |
 
 ## Prioritized remediation
 1. Document intent for top 5 critical modules — establish ADR process, add CLAUDE.md.
 2. Refactor Factory abstraction in 3 high-traffic modules to direct API calls.
 3. Enforce module boundaries via lint rules; resolve the 37 existing violations.
 
-## Recommended mode: Remediate in place
+## Recommendation: Remediate in place
 
 The architecture is fundamentally sound (types and tests are decent). The gap is in intent
 capture and API legibility — both remediable in place without structural rebuild.

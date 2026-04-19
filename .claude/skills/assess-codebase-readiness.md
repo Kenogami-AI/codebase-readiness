@@ -1,22 +1,23 @@
 ---
 name: assess-codebase-readiness
-description: Assess the current codebase's readiness for AI-native development against the 7-dimension model. Produces a scorecard, a ceiling level, and a prioritized remediation plan. Use when the user asks "is this codebase ready for agents?", "what would it take to AI-ify this?", or equivalents — or when the user runs /assess-codebase-readiness.
+description: Assess the current codebase's readiness for AI-native development against the 8-dimension model. Produces a codebase state (greenfield/brownfield/hybrid), a scorecard, a ceiling level, and a prioritized remediation plan or roadmap. Use when the user asks "is this codebase ready for agents?", "what would it take to AI-ify this?", or equivalents — or when the user runs /assess-codebase-readiness.
 ---
 
 # Assess codebase readiness
 
-You are assessing the current working directory's codebase against the seven-dimension readiness model defined at https://framework.ai-native-transformation.com/codebase-readiness.
+You are assessing the current working directory's codebase against the eight-dimension readiness model defined at https://framework.ai-native-transformation.com/codebase-readiness.
 
-Produce a structured report: a score 1-5 per dimension with evidence, an overall readiness level (set by the lowest score, not the average), and a prioritized remediation plan.
+Produce a structured report: the codebase's state (greenfield / brownfield / hybrid), a score 1-5 per dimension with evidence, an overall readiness level (set by the lowest score, not the average), and a prioritized remediation plan.
 
 ## Operating rules
 
 1. **Actually run commands.** Use Bash to collect evidence. Don't guess at coverage or CI times — measure them.
 2. **Cite evidence.** For every score, reference file paths, line numbers, or command output.
 3. **Score conservatively.** If the signal is ambiguous, round down.
-4. **The ceiling is the lowest score.** A codebase with six 5s and one 1 is at the level of that 1. Agents fail at the weakest link.
-5. **Every score below 4 must map to a concrete remediation item.** "Add tests" is not concrete. "Add test coverage for src/billing/invoice.ts (currently 0%)" is.
-6. **Keep the output navigable.** Follow the output template exactly. No creative reformatting.
+4. **The ceiling is the lowest score.** A codebase with seven 5s and one 1 is at the level of that 1. Agents fail at the weakest link.
+5. **Apply deferral credit.** An intentional, documented deferral (in a spec, ADR, roadmap, or README) scores one level higher than the same gap undocumented. Never apply deferral credit based on a verbal claim — only on something in the repo.
+6. **Every score below 4 must map to a concrete remediation item.** "Add tests" is not concrete. "Add test coverage for src/billing/invoice.ts (currently 0%)" is.
+7. **Keep the output navigable.** Follow the output template exactly. No creative reformatting.
 
 ## Process
 
@@ -30,21 +31,36 @@ Before scoring, establish:
 
 Report what you found in the opening section of the scorecard.
 
-### Step 2 — Score each dimension
+### Step 2 — Determine the codebase state
 
-Work through the seven dimensions in order. For each:
+Classify the codebase as one of three states (see https://framework.ai-native-transformation.com/brownfield-strategy#first-is-your-codebase-actually-brownfield):
+
+- **Greenfield** — new codebase, not yet in production or young enough that the architecture is still being actively designed. Low scores are usually scheduling decisions, not debt. Signal: short git history (<6 months of substantial commits), no legacy versions, pre-GA or MVP phase, explicit roadmap deferrals documented.
+- **Brownfield** — production codebase with accumulated decisions, real users, years of patches. Gaps are debt. Signal: long git history, production for substantial time, multiple contributor generations.
+- **Hybrid** — a greenfield service being built inside a brownfield org. The new service is greenfield; the integration layer to legacy is brownfield. Signal: clean modern stack with an awkward API boundary to a legacy system, or references to legacy services that can't be modernized.
+
+State the classification and why.
+
+### Step 3 — Score each dimension
+
+Work through the eight dimensions in order. For each:
 1. Run the signal-collection commands (see per-dimension sections below).
 2. Sample representative files when the rubric calls for qualitative judgment.
 3. Apply the scoring rubric.
-4. Record evidence with file paths and command output.
+4. Apply deferral credit if a documented deferral exists.
+5. Record evidence with file paths and command output.
 
-### Step 3 — Synthesize
+### Step 4 — Synthesize
 
 - Compute the ceiling (lowest score).
 - Map the ceiling score to a readiness level: 1 → Level 0 (Opaque), 2 → Level 1 (Instrumented), 3 → Level 2 (Validated), 4 → Level 3 (Legible) or Level 4 (Specified), 5 → Level 5 (Scenario-governed).
 - Build the remediation plan: start with the lowest-scored dimensions. For each, produce concrete actions that would raise the score by one level.
+- Produce a recommendation appropriate to the codebase state:
+  - **Greenfield** — recommend "continue development" with gap-closure aligned to project milestones. Do NOT pick a brownfield mode. Flag items that should close by GA.
+  - **Brownfield** — recommend one of the four brownfield modes (remediate in place / strangler-fig / rebuild / isolate and bypass) based on the scorecard, architectural soundness, and remaining value.
+  - **Hybrid** — score the greenfield service, but note the integration layer(s) to legacy and recommend a mode for each legacy boundary separately.
 
-### Step 4 — Output
+### Step 5 — Output
 
 Produce the report exactly in the template below.
 
@@ -139,20 +155,35 @@ Produce the report exactly in the template below.
 
 **Note:** this dimension is LLM-assisted by necessity. Static signals are weak. Read modules and judge.
 
-### 7. Observability and operational legibility
+### 7. Observability
 
 **Signals to collect:**
-- Telemetry libraries: `grep -r "opentelemetry\|datadog\|sentry\|newrelic\|honeycomb\|winston\|pino" package.json requirements.txt go.mod Gemfile composer.json 2>/dev/null`.
-- Structured logging: sample a representative file and check for structured log output vs. `console.log` / `print`.
-- Dev setup step count: read `README.md` setup section or `Makefile`; count the commands required to go from fresh clone to running locally.
-- Deploy: check CI for auto-deploy; count steps in deploy config.
+- Telemetry libraries: `grep -r "opentelemetry\|datadog\|sentry\|newrelic\|honeycomb" package.json requirements.txt go.mod Gemfile composer.json 2>/dev/null`.
+- Structured logging: `grep -r "winston\|pino\|structlog\|zap\|slog\|logrus\|log/slog" package.json requirements.txt go.mod 2>/dev/null`; sample a representative file and check for structured log output vs. `console.log` / `print`.
+- Error tracking: Sentry, Bugsnag, Rollbar etc. presence.
+- Metrics: Prometheus, StatsD, Datadog APM, OpenTelemetry instrumentation.
 
 **Scoring rubric:**
-- 1: No structured logs, no traces, no metrics. Dev setup: many manual steps. Deploys require manual intervention.
-- 2: Some logs, no tracing. Fragile dev setup. Scripted but manual deploy.
-- 3: Structured logs and basic metrics. Dev setup works with documented commands. Deploy reliable.
-- 4: Full telemetry (logs + traces + metrics). Reproducible dev (one command). One-command deploy.
-- 5: Production behavior fully observable. Dev and deploy as fast as CI. Errors produce reproducible test cases.
+- 1: No structured logs, no traces, no metrics, no error tracking.
+- 2: Some logs, no tracing.
+- 3: Structured logs and basic metrics; error tracking in place.
+- 4: Full telemetry (logs + traces + metrics) with query access.
+- 5: Production behavior fully observable; errors produce reproducible test cases; observability itself is part of the dev workflow.
+
+### 8. Dev and deploy simplicity
+
+**Signals to collect:**
+- Dev setup: read `README.md` setup section or `Makefile`; count the commands required to go from fresh clone to running locally.
+- Dev environment: check for `docker-compose.yml`, `devcontainer.json`, `Nix` config, or a setup script — anything that makes dev reproducible.
+- Deploy: check CI for auto-deploy config; count steps in deploy config.
+- Dev/prod parity: look for differences between dev and prod (different databases, different auth, mocked services).
+
+**Scoring rubric:**
+- 1: Dev setup takes days or requires tribal knowledge; deploys manual and fragile.
+- 2: Setup scripted but fragile; deploys require runbook steps.
+- 3: Setup works with documented commands; deploy reliable.
+- 4: One-command setup; one-command (or auto-) deploy.
+- 5: Dev, CI, and prod are architecturally identical; anyone can set up and deploy on day one.
 
 ## Output template
 
@@ -166,6 +197,10 @@ Produce the report in this exact format.
 **Framework(s):** {frameworks}
 **Source files (approx):** {count}
 **Date:** {YYYY-MM-DD}
+
+## Codebase state: {Greenfield | Brownfield | Hybrid}
+
+{1-2 sentences on why — git history, production status, architectural maturity.}
 
 ## Readiness level: {Level X — {name}}
 
@@ -181,7 +216,10 @@ Ceiling set by dimension {N} ({name}), scoring {X}.
 | 4 | Module boundary clarity | {X} | {one-line summary} |
 | 5 | API directness | {X} | {one-line summary} |
 | 6 | Documented intent | {X} | {one-line summary} |
-| 7 | Observability and operational legibility | {X} | {one-line summary} |
+| 7 | Observability | {X} | {one-line summary} |
+| 8 | Dev and deploy simplicity | {X} | {one-line summary} |
+
+{If any scores include deferral credit, note which dimensions and what document the deferral is based on.}
 
 ## Evidence
 
@@ -203,8 +241,11 @@ Ceiling set by dimension {N} ({name}), scoring {X}.
 ### 6. Documented intent — {X}/5
 {ADR count/status, README count, CLAUDE.md present?, intent-documentation assessment}
 
-### 7. Observability and operational legibility — {X}/5
-{Telemetry SDKs detected, dev setup command count, deploy process}
+### 7. Observability — {X}/5
+{Telemetry SDKs detected, structured logging presence, error tracking, metrics}
+
+### 8. Dev and deploy simplicity — {X}/5
+{Dev setup command count, deploy process, dev/prod parity}
 
 ## Prioritized remediation
 
@@ -219,11 +260,19 @@ Sequenced by ceiling-raising potential. Start with the lowest scores.
 - Framework: https://framework.ai-native-transformation.com/codebase-readiness
 - Brownfield strategy: https://framework.ai-native-transformation.com/brownfield-strategy
 
-## Recommended mode
+## Recommendation
 
-Based on the scorecard, the appropriate brownfield mode is: **{Remediate in place | Strangler-fig | Rebuild | Isolate and bypass}**.
+{Pick ONE of the three templates below based on the codebase state classified above.}
 
-{One paragraph explaining why: architectural soundness, seam availability, remaining value in the legacy, team capacity to remediate.}
+### If Greenfield:
+**Continue development.** Close readiness gaps on project milestone timing. The following items should close before GA: {list items below 4 that are tied to a production-readiness concern}. The following items can wait until post-GA if deferred in the roadmap: {list deferred items}. Do not pick a brownfield mode — this codebase is not in that situation.
+
+### If Brownfield:
+**Mode: {Remediate in place | Strangler-fig | Rebuild | Isolate and bypass}.** {One paragraph explaining why: architectural soundness, seam availability, remaining value in the legacy, team capacity to remediate. Reference the decision criteria table at https://framework.ai-native-transformation.com/brownfield-strategy#decision-criteria.}
+
+### If Hybrid:
+**Greenfield portion: continue development.** {Remediation items for the new service.}
+**Legacy integration layer(s):** {For each legacy boundary, recommend a mode: Remediate / Strangler-fig / Rebuild / Isolate.}
 ```
 
 ## Constraints on the output
