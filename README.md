@@ -33,7 +33,7 @@ Readiness tools exist for individual dimensions — coverage reporters, type che
 ## Installation
 
 ```bash
-git clone https://github.com/zoyth/codebase-readiness ~/dev/codebase-readiness
+git clone https://github.com/Kenogami-AI/codebase-readiness ~/dev/codebase-readiness
 mkdir -p ~/.claude/skills
 ln -s ~/dev/codebase-readiness/.claude/skills/assess-codebase-readiness.md ~/.claude/skills/
 ```
