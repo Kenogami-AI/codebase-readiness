@@ -1,12 +1,12 @@
 # Codebase Readiness
 
-A Claude Code skill for assessing a codebase's readiness for AI-native development.
+A Claude Code skill that runs the **Readiness Grid** — a nine-dimension diagnostic for AI-native development, defined at [framework.ai-native-transformation.com/codebase-readiness](https://framework.ai-native-transformation.com/codebase-readiness).
 
-Implements the seven-dimension readiness model from [framework.ai-native-transformation.com/codebase-readiness](https://framework.ai-native-transformation.com/codebase-readiness). Given a codebase, it produces a scorecard (1–5 per dimension), a readiness level (set by the lowest score, not the average), and a prioritized remediation plan.
+Given a codebase, it produces a scorecard (1–5 per dimension), a readiness level (set by the lowest score, not the average), and a prioritized remediation plan.
 
 ---
 
-## What it measures
+## The Readiness Grid
 
 | # | Dimension | Question it answers |
 |:-:|---|---|

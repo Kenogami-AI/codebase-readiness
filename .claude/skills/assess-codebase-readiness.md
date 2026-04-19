@@ -5,7 +5,7 @@ description: Assess the current codebase's readiness for AI-native development a
 
 # Assess codebase readiness
 
-You are assessing the current working directory's codebase against the nine-dimension readiness model defined at https://framework.ai-native-transformation.com/codebase-readiness.
+You are assessing the current working directory's codebase against the **Readiness Grid** — a nine-dimension diagnostic defined at https://framework.ai-native-transformation.com/codebase-readiness.
 
 Produce a structured report: the codebase's state (greenfield / brownfield / hybrid), a score 1-5 per dimension with evidence, an overall readiness level (set by the lowest score, not the average), and a prioritized remediation plan.
 
