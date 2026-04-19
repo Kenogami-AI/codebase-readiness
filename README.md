@@ -1,12 +1,14 @@
 # Codebase Readiness
 
-A Claude Code skill that runs the **Readiness Grid** — a nine-dimension diagnostic for AI-native development, defined at [framework.ai-native-transformation.com/codebase-readiness](https://framework.ai-native-transformation.com/codebase-readiness).
+**A Claude Code skill that runs the [Codebase Readiness Grid](https://framework.ai-native-transformation.com/codebase-readiness) — a nine-dimension diagnostic for AI-native development.**
 
-Given a codebase, it produces a scorecard (1–5 per dimension), a readiness level (set by the lowest score, not the average), and a prioritized remediation plan.
+By [Kenogami](https://kenogami.com). Part of the [AI-Native Transformation Framework](https://framework.ai-native-transformation.com).
+
+Given a codebase, the skill produces a scorecard (1–5 per dimension), a readiness level (set by the lowest score, not the average), and a prioritized remediation plan.
 
 ---
 
-## The Readiness Grid
+## The Codebase Readiness Grid
 
 | # | Dimension | Question it answers |
 |:-:|---|---|
@@ -24,7 +26,7 @@ Dimensions 1, 2, and 5 are **blocking** — low scores there compromise agent wo
 
 The skill also classifies the codebase state (greenfield / brownfield / hybrid) and applies a **deferral credit**: intentional, documented deferrals score one level higher than undocumented gaps. **Scorecards are never summarized with an average** — the ceiling (lowest score) sets the readiness level, and blocking dimensions take priority regardless of overall distribution.
 
-The framework page linked above explains each dimension, the scoring rubric, and why the dimensions together predict whether AI agents can produce reliable work on a codebase.
+The [framework page](https://framework.ai-native-transformation.com/codebase-readiness) explains each dimension, the scoring rubric, and why the dimensions together predict whether AI agents can produce reliable work on a codebase.
 
 ---
 
@@ -144,9 +146,11 @@ MIT. See [LICENSE](./LICENSE).
 
 ---
 
-## Credits
+## About
 
-Based on the codebase readiness model at [framework.ai-native-transformation.com](https://framework.ai-native-transformation.com/codebase-readiness), which synthesizes research from:
+Created and maintained by [Kenogami](https://kenogami.com). The Codebase Readiness Grid is part of the [AI-Native Transformation Framework](https://framework.ai-native-transformation.com) — a broader framework for transforming engineering, operations, and roles around AI-native development.
+
+The readiness model synthesizes research from:
 
 - [AI Codebase Maturity Model (ACMM)](https://arxiv.org/abs/2604.09388)
 - [Harness Engineering for Coding Agent Users (Fowler)](https://martinfowler.com/articles/harness-engineering.html)
