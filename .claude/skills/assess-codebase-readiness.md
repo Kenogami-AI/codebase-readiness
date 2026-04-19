@@ -55,10 +55,17 @@ Work through the eight dimensions in order. For each:
 - Compute the ceiling (lowest score).
 - Map the ceiling score to a readiness level: 1 → Level 0 (Opaque), 2 → Level 1 (Instrumented), 3 → Level 2 (Validated), 4 → Level 3 (Legible) or Level 4 (Specified), 5 → Level 5 (Scenario-governed).
 - Build the remediation plan: start with the lowest-scored dimensions. For each, produce concrete actions that would raise the score by one level.
-- Produce a recommendation appropriate to the codebase state:
-  - **Greenfield** — recommend "continue development" with gap-closure aligned to project milestones. Do NOT pick a brownfield mode. Flag items that should close by GA.
-  - **Brownfield** — recommend one of the four brownfield modes (remediate in place / strangler-fig / rebuild / isolate and bypass) based on the scorecard, architectural soundness, and remaining value.
-  - **Hybrid** — score the greenfield service, but note the integration layer(s) to legacy and recommend a mode for each legacy boundary separately.
+- Produce a **path to Level 5** recommendation. The question is always: what is the shortest path from the current level to Level 5 for this codebase? Team capacity, strategic priorities, and resource allocation are explicitly out of scope — those are decisions the human makes after reading the recommendation, not inputs to it. Answer purely on the evidence.
+
+  Four possible paths map to the four modes:
+  - **Remediate in place** — Level 5 happens in this codebase via staged harness-building. Use when the architecture is sound and remediation cost is bounded.
+  - **Strangler-fig** — Level 5 happens gradually; new pieces are built Level 5-ready and old pieces retired. Use when clean seams exist and continuity matters.
+  - **Full rebuild** — Level 5 happens in a new version of this codebase. Use when the existing structure actively prevents the work.
+  - **Isolate and bypass** — Level 5 does not happen in this codebase; it happens alongside in new Level 5-ready codebases. This codebase stays at its current level. Use when remediation cost exceeds the value remaining in the codebase.
+
+  For greenfield state: the path is "continue development and close deferred gaps on project milestones." No brownfield mode applies yet.
+
+  For hybrid state: the path has two components — the greenfield service continues development; each legacy boundary gets its own mode selection.
 
 ### Step 5 — Output
 
@@ -260,19 +267,28 @@ Sequenced by ceiling-raising potential. Start with the lowest scores.
 - Framework: https://framework.ai-native-transformation.com/codebase-readiness
 - Brownfield strategy: https://framework.ai-native-transformation.com/brownfield-strategy
 
-## Recommendation
+## Path to Level 5
 
 {Pick ONE of the three templates below based on the codebase state classified above.}
 
 ### If Greenfield:
-**Continue development.** Close readiness gaps on project milestone timing. The following items should close before GA: {list items below 4 that are tied to a production-readiness concern}. The following items can wait until post-GA if deferred in the roadmap: {list deferred items}. Do not pick a brownfield mode — this codebase is not in that situation.
+**Path: continue development, close deferred gaps on project milestone timing.**
+
+Items that should close before GA: {list items below 4 that are tied to a production-readiness concern}.
+Items that can wait until post-GA if already deferred in the roadmap: {list deferred items}.
+
+No brownfield mode applies — this codebase is not in that situation yet. Re-run the assessment at GA and treat unclosed gaps as brownfield.
 
 ### If Brownfield:
-**Mode: {Remediate in place | Strangler-fig | Rebuild | Isolate and bypass}.** {One paragraph explaining why: architectural soundness, seam availability, remaining value in the legacy, team capacity to remediate. Reference the decision criteria table at https://framework.ai-native-transformation.com/brownfield-strategy#decision-criteria.}
+**Path: {Remediate in place | Strangler-fig | Rebuild | Isolate and bypass}.**
+
+{One paragraph explaining why this mode is the shortest path to Level 5 for this codebase, based on the evidence: architectural soundness, seam availability, remaining value, structural fixability. Do not consider team size, strategic priorities, or resource allocation — those are human decisions that sit outside this assessment. Reference the decision criteria at https://framework.ai-native-transformation.com/brownfield-strategy#decision-criteria.}
+
+{If the path is Isolate and bypass, state plainly: "Level 5 does not happen in this codebase. The path is through new Level 5-ready codebases alongside it."}
 
 ### If Hybrid:
-**Greenfield portion: continue development.** {Remediation items for the new service.}
-**Legacy integration layer(s):** {For each legacy boundary, recommend a mode: Remediate / Strangler-fig / Rebuild / Isolate.}
+**Path for the greenfield service: continue development.** {Remediation items for the new service.}
+**Path for each legacy integration layer:** {For each legacy boundary, recommend a mode: Remediate / Strangler-fig / Rebuild / Isolate.}
 ```
 
 ## Constraints on the output
