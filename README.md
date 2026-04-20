@@ -43,12 +43,12 @@ Readiness tools exist for individual dimensions — coverage reporters, type che
 ```bash
 git clone https://github.com/Kenogami-AI/codebase-readiness ~/dev/codebase-readiness
 mkdir -p ~/.claude/skills
-ln -s ~/dev/codebase-readiness/.claude/skills/assess-codebase-readiness.md ~/.claude/skills/
+ln -s ~/dev/codebase-readiness/.claude/skills/assess-codebase-readiness ~/.claude/skills/assess-codebase-readiness
 ```
 
-The symlink makes `/assess-codebase-readiness` available in any Claude Code session.
+The symlink makes `/assess-codebase-readiness` available in any Claude Code session. Restart Claude Code after installing so it picks up the new skill.
 
-Alternative: drop the skill directly into any project's `.claude/skills/` directory to scope it to that project.
+Alternative: copy the `assess-codebase-readiness/` directory into any project's `.claude/skills/` to scope it to that project.
 
 ---
 
